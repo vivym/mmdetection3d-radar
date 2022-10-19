@@ -1,5 +1,5 @@
 lyft_dataset_sdk
-networkx>=2.2,<2.3
+networkx
 numba==0.53.0
 numpy
 nuscenes-devkit

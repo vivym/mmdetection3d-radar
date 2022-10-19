@@ -198,6 +198,38 @@ def waymo_data_prep(root_path,
         num_worker=workers).create()
 
 
+def kitti2_data_prep(root_path,
+                    info_prefix,
+                    version,
+                    out_dir,
+                    with_plane=False):
+    """Prepare data related to Kitti dataset.
+
+    Related data consists of '.pkl' files recording basic infos,
+    2D annotations and groundtruth database.
+
+    Args:
+        root_path (str): Path of dataset root.
+        info_prefix (str): The prefix of info filenames.
+        version (str): Dataset version.
+        out_dir (str): Output directory of the groundtruth database info.
+        with_plane (bool, optional): Whether to use plane information.
+            Default: False.
+    """
+    kitti.create_kitti_info_file(root_path, info_prefix, with_plane)
+    kitti.create_reduced_point_cloud(root_path, info_prefix)
+
+    create_groundtruth_database(
+        "KittiDataset",
+        root_path,
+        "kitti",
+        f"{out_dir}/kitti_infos_train.pkl",
+        relative_path=False,
+        mask_anno_path="instances_train.json",
+        with_mask=(version == "mask")
+    )
+
+
 parser = argparse.ArgumentParser(description='Data converter arg parser')
 parser.add_argument('dataset', metavar='kitti', help='name of the dataset')
 parser.add_argument(
@@ -311,3 +343,11 @@ if __name__ == '__main__':
             num_points=args.num_points,
             out_dir=args.out_dir,
             workers=args.workers)
+    elif args.dataset == "kitti2":
+        kitti2_data_prep(
+            root_path=args.root_path,
+            info_prefix=args.extra_tag,
+            version=args.version,
+            out_dir=args.out_dir,
+            with_plane=args.with_plane
+        )
