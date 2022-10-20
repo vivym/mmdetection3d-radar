@@ -82,17 +82,25 @@ def save_data_infos(
     split: str,
     data_paths: List[Tuple[str, str, Path, Path]],
 ):
+    point_cloud_range = np.asarray([0, -40, -3, 70.4, 40, 1], dtype=np.float32)
+
     data_infos = []
     for idx, scene_type, pcd_path, label_path in tqdm(data_paths):
         pcd = o3d.io.read_point_cloud(str(pcd_path))
-        points = np.asarray(pcd.points)
-        colors = np.asarray(pcd.colors)
+        points = np.asarray(pcd.points).astype(np.float32)
+        colors = np.asarray(pcd.colors).astype(np.float32)
+
+        assert not np.any(np.isnan(points))
+        assert ((points > point_cloud_range[:3]).all(-1) & (points < point_cloud_range[3:]).all(-1)).any(), (
+            points.min(0), points.max(0)
+        )
 
         if colors.shape[0] > 0:
-            points = np.concatenate([points, colors], axis=1)
+            points = np.concatenate([points, colors[:, 0:1]], axis=1)
         else:
-            points = np.concatenate([points, points], axis=1)
+            points = np.concatenate([points, points[:, 2:3]], axis=1)
 
+        assert points.shape[0] > 0
         points.tofile(data_root / "training" / "velodyne" / f"{idx:06d}.bin")
         points.tofile(data_root / "training" / "velodyne_reduced" / f"{idx:06d}.bin")
 
@@ -126,6 +134,7 @@ def save_data_infos(
             "image": {
                 "image_idx": idx,
                 "image_path": "",
+                "image_shape": (10000, 10000),
             },
             "calib": {
                 "R0_rect": np.eye(4),
@@ -140,6 +149,7 @@ def save_data_infos(
                 "bbox": bbox,
                 "occluded": np.zeros(location.shape[0]),
                 "truncated": np.zeros(location.shape[0]),
+                "alpha": np.ones(location.shape[0]) * -10,
             },
         }
         add_difficulty_to_annos(data_info)
@@ -153,10 +163,10 @@ def main():
     data_root = Path("data/kitti2")
     velodyne_path1 = data_root / "training" / "velodyne"
     if not velodyne_path1.exists():
-        velodyne_path1.mkdir()
+        velodyne_path1.mkdir(parents=True)
     velodyne_path2 = data_root / "training" / "velodyne_reduced"
     if not velodyne_path2.exists():
-        velodyne_path2.mkdir()
+        velodyne_path2.mkdir(parents=True)
 
     data_paths = load_raw_data(data_root / "raw_data", "ouster")
     train_paths, val_paths = split_train_val(data_paths)
