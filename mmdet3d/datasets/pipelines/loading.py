@@ -404,6 +404,7 @@ class LoadPointsFromFile(object):
         try:
             pts_bytes = self.file_client.get(pts_filename)
             points = np.frombuffer(pts_bytes, dtype=np.float32)
+            assert not np.isnan(points).any(), ("nan", pts_filename)
         except ConnectionError:
             mmcv.check_file_exist(pts_filename)
             if pts_filename.endswith('.npy'):

@@ -241,7 +241,9 @@ def create_groundtruth_database(dataset_class_name,
         annos = example['ann_info']
         image_idx = example['sample_idx']
         points = example['points'].tensor.numpy()
+        assert not np.isnan(points).any()
         gt_boxes_3d = annos['gt_bboxes_3d'].tensor.numpy()
+        assert not np.isnan(gt_boxes_3d).any(), gt_boxes_3d
         names = annos['gt_names']
         group_dict = dict()
         if 'group_ids' in annos:
@@ -294,6 +296,7 @@ def create_groundtruth_database(dataset_class_name,
             # save point clouds and image patches for each object
             gt_points = points[point_indices[:, i]]
             gt_points[:, :3] -= gt_boxes_3d[i, :3]
+            assert not np.isnan(gt_points).any()
 
             if with_mask:
                 if object_masks[i].sum() == 0 or not valid_inds[i]:

@@ -436,7 +436,7 @@ class Custom3DDataset(Dataset):
                 data = self.prepare_train_data(idx)
             except Exception as e:
                 data = None
-                print("try another", idx)
+                print("try another", idx, e)
             if data is None:
                 idx = self._rand_another(idx)
                 continue

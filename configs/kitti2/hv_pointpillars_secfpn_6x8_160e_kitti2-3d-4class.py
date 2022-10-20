@@ -1,13 +1,13 @@
 _base_ = [
-    '../_base_/models/hv_pointpillars_secfpn_kitti.py',
-    '../_base_/datasets/kitti2-3d-3class.py',
+    '../_base_/models/hv_pointpillars_secfpn_kitti2.py',
+    '../_base_/datasets/kitti2-3d-4class.py',
     '../_base_/schedules/cyclic_40e.py', '../_base_/default_runtime.py'
 ]
 
-point_cloud_range = [0, -39.68, -3, 69.12, 39.68, 1]
+point_cloud_range = [0, -39.68, -1, 69.12, 39.68, 3]
 # dataset settings
 data_root = 'data/kitti2/'
-class_names = ['Pedestrian', 'Cyclist', 'Car']
+class_names = ['Pedestrian', 'Cyclist', 'Car', 'Cone']
 # PointPillars adopted a different sampling strategies among classes
 
 file_client_args = dict(backend='disk')
@@ -29,9 +29,9 @@ db_sampler = dict(
     rate=1.0,
     prepare=dict(
         filter_by_difficulty=[-1],
-        filter_by_min_points=dict(Car=5, Pedestrian=5, Cyclist=5)),
+        filter_by_min_points=dict(Car=5, Pedestrian=5, Cyclist=5, Cone=5)),
     classes=class_names,
-    sample_groups=dict(Car=15, Pedestrian=15, Cyclist=15),
+    sample_groups=dict(Car=15, Pedestrian=15, Cyclist=15, Cone=15),
     points_loader=dict(
         type='LoadPointsFromFile',
         coord_type='LIDAR',
@@ -95,14 +95,14 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=12,
     train=dict(dataset=dict(pipeline=train_pipeline, classes=class_names)),
     val=dict(pipeline=test_pipeline, classes=class_names),
     test=dict(pipeline=test_pipeline, classes=class_names))
 
 # In practice PointPillars also uses a different schedule
 # optimizer
-lr = 0.001
+lr = 0.002
 optimizer = dict(lr=lr)
 # max_norm=35 is slightly better than 10 for PointPillars in the earlier
 # development of the codebase thus we keep the setting. But we does not

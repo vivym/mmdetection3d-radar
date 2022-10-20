@@ -962,7 +962,9 @@ class PointsRangeFilter(object):
         points = input_dict['points']
         points_mask = points.in_range_3d(self.pcd_range)
         clean_points = points[points_mask]
-        assert clean_points.shape[0] > 0
+        assert clean_points.shape[0] > 0, (
+            self.pcd_range, points.tensor.min(0)[0], points.tensor.max(0)[0]
+        )
         input_dict['points'] = clean_points
         points_mask = points_mask.numpy()
 

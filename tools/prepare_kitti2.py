@@ -2,6 +2,7 @@ from typing import List, Tuple
 from pathlib import Path
 import pickle
 
+import torch
 import open3d as o3d
 import numpy as np
 from tqdm import tqdm
@@ -68,6 +69,10 @@ def parse_kitti_line(line):
     h, w, l = map(float, items[8:11])
     x, y, z, yaw = map(float, items[11:15])
 
+    if np.isnan([h, w, l, x, y, z, yaw]).any():
+        print("Skip line:", line)
+        return None
+
     return {
         "location": [x, y, z],
         "dimension": [l, w, h],
@@ -82,8 +87,6 @@ def save_data_infos(
     split: str,
     data_paths: List[Tuple[str, str, Path, Path]],
 ):
-    point_cloud_range = np.asarray([0, -40, -3, 70.4, 40, 1], dtype=np.float32)
-
     data_infos = []
     for idx, scene_type, pcd_path, label_path in tqdm(data_paths):
         pcd = o3d.io.read_point_cloud(str(pcd_path))
@@ -91,9 +94,6 @@ def save_data_infos(
         colors = np.asarray(pcd.colors).astype(np.float32)
 
         assert not np.any(np.isnan(points))
-        assert ((points > point_cloud_range[:3]).all(-1) & (points < point_cloud_range[3:]).all(-1)).any(), (
-            points.min(0), points.max(0)
-        )
 
         if colors.shape[0] > 0:
             points = np.concatenate([points, colors[:, 0:1]], axis=1)
@@ -110,17 +110,26 @@ def save_data_infos(
                 lambda x: len(x) > 0 and x.split(" ")[0] in CATEGORIES, lines
             )
             annos = map(parse_kitti_line, lines)
+            annos = filter(lambda x: x is not None, annos)
             annos = list(annos)
 
         rt_mat = np.asarray([[0, -1, 0], [0, 0, -1], [1, 0, 0]], dtype=np.float32)
         Trv2c = np.eye(4)
         Trv2c[:3, :3] = rt_mat
+        P2 = np.asarray([
+            [0.0001, 0.0000, 0.0000, 1.],
+            [0.0000, 0.0001, 0.0000, 1.],
+            [0.0000, 0.0000, 0.0001, 1.],
+            [0.0000, 0.0000, 0.0000, 1.],
+        ])
 
         locations = np.asarray([anno["location"] for anno in annos])
         dimensions = np.asarray([anno["dimension"] for anno in annos])
         yaws = np.asarray([anno["yaw"] for anno in annos])
         name = np.asarray([anno["name"] for anno in annos])
         bbox = np.asarray([anno["bbox"] for anno in annos])
+
+        locations[:, 2] -= dimensions[:, 2] / 2.
 
         bboxes_3d = np.concatenate([locations, dimensions, yaws[:, np.newaxis]], axis=1)
         bboxes_3d_cam = LiDARInstance3DBoxes(bboxes_3d).convert_to(
@@ -129,6 +138,10 @@ def save_data_infos(
         location = bboxes_3d_cam[:, 0:3]
         dimensions = bboxes_3d_cam[:, 3:6]
         rotation_y = bboxes_3d_cam[:, 6]
+
+        assert not np.any(np.isnan(location)), (
+            location[13], annos[13],
+        )
 
         data_info = {
             "image": {
@@ -139,7 +152,7 @@ def save_data_infos(
             "calib": {
                 "R0_rect": np.eye(4),
                 "Tr_velo_to_cam": Trv2c,
-                "P2": np.eye(4),
+                "P2": P2,
             },
             "annos": {
                 "location": location,
