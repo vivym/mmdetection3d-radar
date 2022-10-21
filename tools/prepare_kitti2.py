@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from pathlib import Path
 import pickle
+from unicodedata import category
 
 import torch
 import open3d as o3d
@@ -87,6 +88,8 @@ def save_data_infos(
     split: str,
     data_paths: List[Tuple[str, str, Path, Path]],
 ):
+    all_dimensions = {k: [] for k in CATEGORIES}
+
     data_infos = []
     for idx, scene_type, pcd_path, label_path in tqdm(data_paths):
         pcd = o3d.io.read_point_cloud(str(pcd_path))
@@ -129,6 +132,10 @@ def save_data_infos(
         name = np.asarray([anno["name"] for anno in annos])
         bbox = np.asarray([anno["bbox"] for anno in annos])
 
+        for anno in annos:
+            category, dimension = anno["name"], anno["dimension"]
+            all_dimensions[category.lower()].append(dimension)
+
         locations[:, 2] -= dimensions[:, 2] / 2.
 
         bboxes_3d = np.concatenate([locations, dimensions, yaws[:, np.newaxis]], axis=1)
@@ -168,6 +175,9 @@ def save_data_infos(
         add_difficulty_to_annos(data_info)
         data_infos.append(data_info)
 
+    for category, dimensions in all_dimensions.items():
+        print(category, "mean dimensions:", np.mean(dimensions, axis=0))
+
     with open(data_root / f"kitti_infos_{split}.pkl", "wb") as f:
         pickle.dump(data_infos, f)
 
@@ -188,7 +198,7 @@ def main():
     save_data_infos(data_root, "val", val_paths)
 
     create_groundtruth_database(
-        "KittiDataset",
+        "Kitti2Dataset",
         data_root,
         "kitti",
         data_root / "kitti_infos_train.pkl",
