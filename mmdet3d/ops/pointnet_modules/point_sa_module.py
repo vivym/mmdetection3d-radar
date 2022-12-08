@@ -207,6 +207,11 @@ class BasePointSAModule(nn.Module):
             grouped_results = self.groupers[i](points_xyz, new_xyz, features)
 
             # (B, mlp[-1], num_point, nsample)
+            # try:
+            #     new_features = self.mlps[i](grouped_results)
+            # except Exception as e:
+            #     print("new_features = self.mlps[i](grouped_results)", grouped_results.shape)
+            #     raise e
             new_features = self.mlps[i](grouped_results)
 
             # this is a bit hack because PAConv outputs two values

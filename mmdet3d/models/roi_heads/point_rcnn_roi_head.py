@@ -211,6 +211,7 @@ class PointRCNNRoIHead(Base3DRoIHead):
         bbox_results = dict(cls_score=cls_score, bbox_pred=bbox_pred)
         return bbox_results
 
+    @torch.no_grad()
     def _assign_and_sample(self, proposal_list, gt_bboxes_3d, gt_labels_3d):
         """Assign and sample proposals for training.
 

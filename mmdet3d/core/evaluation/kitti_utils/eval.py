@@ -712,15 +712,15 @@ def kitti_eval(gt_annos,
     compute_aos = False
     pred_alpha = False
     valid_alpha_gt = False
-    for anno in dt_annos:
-        mask = (anno['alpha'] != -10)
-        if anno['alpha'][mask].shape[0] != 0:
-            pred_alpha = True
-            break
-    for anno in gt_annos:
-        if anno['alpha'][0] != -10:
-            valid_alpha_gt = True
-            break
+    # for anno in dt_annos:
+    #     mask = (anno['alpha'] != -10)
+    #     if anno['alpha'][mask].shape[0] != 0:
+    #         pred_alpha = True
+    #         break
+    # for anno in gt_annos:
+    #     if anno['alpha'][0] != -10:
+    #         valid_alpha_gt = True
+    #         break
     compute_aos = (pred_alpha and valid_alpha_gt)
     if compute_aos:
         eval_types.append('aos')

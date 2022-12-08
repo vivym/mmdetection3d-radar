@@ -223,6 +223,12 @@ class PointRCNNBboxHead(BaseModule):
         l_xyz, l_features = [input_data[..., 0:3].contiguous()], \
                             [merged_features.squeeze(dim=3)]
         for i in range(len(self.SA_modules)):
+            # try:
+            #     li_xyz, li_features, cur_indices = \
+            #         self.SA_modules[i](l_xyz[i], l_features[i])
+            # except Exception as e:
+            #     print("self.SA_modules[i]", l_xyz[i].shape, l_features[i].shape)
+            #     raise e
             li_xyz, li_features, cur_indices = \
                 self.SA_modules[i](l_xyz[i], l_features[i])
             l_xyz.append(li_xyz)

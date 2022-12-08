@@ -41,6 +41,7 @@ def bbox3d2roi(bbox_list):
             img_inds = bboxes.new_full((bboxes.size(0), 1), img_id)
             rois = torch.cat([img_inds, bboxes], dim=-1)
         else:
+            # rois = torch.zeros_like(bboxes)
             rois = torch.zeros(
                 bboxes.shape[0], bboxes.shape[1] + 1,
                 dtype=bboxes.dtype, device=bboxes.device,

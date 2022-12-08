@@ -54,12 +54,13 @@ class VoxelNet(SingleStage3DDetector):
         """Apply hard voxelization to points."""
         voxels, coors, num_points = [], [], []
         for res in points:
-            try:
-                res_voxels, res_coors, res_num_points = self.voxel_layer(res)
-            except Exception as e:
-                print("res", res.shape)
-                print("res range", res.min(0)[0], res.max(0)[0])
-                raise e
+            # try:
+            #     res_voxels, res_coors, res_num_points = self.voxel_layer(res)
+            # except Exception as e:
+            #     print("res", res.shape)
+            #     print("res range", res.min(0)[0], res.max(0)[0])
+            #     raise e
+            res_voxels, res_coors, res_num_points = self.voxel_layer(res)
             voxels.append(res_voxels)
             coors.append(res_coors)
             num_points.append(res_num_points)

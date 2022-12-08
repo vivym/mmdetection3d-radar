@@ -1,12 +1,12 @@
 _base_ = [
     '../_base_/models/hv_pointpillars_secfpn_kitti2.py',
-    '../_base_/datasets/kitti2-3d-4class.py',
+    '../_base_/datasets/kitti2-3d-4class-oculii.py',
     '../_base_/schedules/cyclic_40e.py', '../_base_/default_runtime.py'
 ]
 
 point_cloud_range = [0, -39.68, -1, 69.12, 39.68, 3]
 # dataset settings
-data_root = 'data/kitti2/'
+data_root = 'data/kitti2/oculii/'
 class_names = ['Pedestrian', 'Cyclist', 'Car', 'Cone']
 # PointPillars adopted a different sampling strategies among classes
 

@@ -442,9 +442,25 @@ class Kitti2Dataset(Custom3DDataset):
                 box_preds_lidar = box_dict['box3d_lidar']
                 label_preds = box_dict['label_preds']
 
+                dist_limit = 120000000
+
+                count = 0
+                for box_lidar in box_preds_lidar:
+                    xy = box_lidar[:2]
+                    dist = (xy ** 2).sum() ** 0.5
+                    if dist > dist_limit:
+                        continue
+                    count += 1
+
                 for box, box_lidar, bbox, score, label in zip(
                         box_preds, box_preds_lidar, box_2d_preds, scores,
                         label_preds):
+                    if count > 0:
+                        xy = box_lidar[:2]
+                        dist = (xy ** 2).sum() ** 0.5
+                        if dist > dist_limit:
+                            continue
+
                     bbox[2:] = np.minimum(bbox[2:], image_shape[::-1])
                     bbox[:2] = np.maximum(bbox[:2], [0, 0])
                     anno['name'].append(class_names[int(label)])

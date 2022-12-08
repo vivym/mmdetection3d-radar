@@ -1,12 +1,12 @@
 _base_ = [
-    '../_base_/datasets/kitti2-3d-4class.py', '../_base_/models/point_rcnn_cone.py',
+    '../_base_/datasets/kitti2-3d-4class-rs.py', '../_base_/models/point_rcnn_cone.py',
     '../_base_/default_runtime.py', '../_base_/schedules/cyclic_40e.py'
 ]
 
 # dataset settings
 dataset_type = 'Kitti2Dataset'
-data_root = 'data/kitti2/'
-class_names = ['Car', 'Pedestrian', 'Cyclist', 'Cone']
+data_root = 'data/kitti2/rs/'
+class_names = ['Cone']
 point_cloud_range = [0, -40, -1, 70.4, 40, 3]
 input_modality = dict(use_lidar=True, use_camera=False)
 
@@ -16,8 +16,8 @@ db_sampler = dict(
     rate=1.0,
     prepare=dict(
         filter_by_difficulty=[-1],
-        filter_by_min_points=dict(Car=5, Pedestrian=5, Cyclist=5)),
-    sample_groups=dict(Car=20, Pedestrian=15, Cyclist=15),
+        filter_by_min_points=dict(Cone=5)),
+    sample_groups=dict(Cone=20),
     classes=class_names)
 
 train_pipeline = [
@@ -69,20 +69,20 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=6,
     workers_per_gpu=4,
     train=dict(
         type='RepeatDataset',
-        #times=1,
+        times=32,
         dataset=dict(pipeline=train_pipeline, classes=class_names)),
     val=dict(pipeline=test_pipeline, classes=class_names),
     test=dict(pipeline=test_pipeline, classes=class_names))
 
 # optimizer
-lr = 0.002  # max learning rate
+lr = 0.0005  # max learning rate
 optimizer = dict(lr=lr, betas=(0.95, 0.85))
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=30)
+runner = dict(type='EpochBasedRunner', max_epochs=10)
 evaluation = dict(interval=2)
 # yapf:disable
 log_config = dict(

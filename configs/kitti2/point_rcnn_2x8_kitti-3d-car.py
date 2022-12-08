@@ -6,7 +6,7 @@ _base_ = [
 # dataset settings
 dataset_type = 'Kitti2Dataset'
 data_root = 'data/kitti2/'
-class_names = ['Car', 'Pedestrian', 'Cyclist', 'Cone']
+class_names = ['Car']
 point_cloud_range = [0, -40, -1, 70.4, 40, 3]
 input_modality = dict(use_lidar=True, use_camera=False)
 
@@ -69,11 +69,11 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=6,
     workers_per_gpu=4,
     train=dict(
         type='RepeatDataset',
-        #times=1,
+        # times=12,
         dataset=dict(pipeline=train_pipeline, classes=class_names)),
     val=dict(pipeline=test_pipeline, classes=class_names),
     test=dict(pipeline=test_pipeline, classes=class_names))

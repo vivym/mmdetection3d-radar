@@ -133,6 +133,16 @@ def save_data_infos(
         name = np.asarray([anno["name"] for anno in annos])
         bbox = np.asarray([anno["bbox"] for anno in annos])
 
+        xy = locations[:, :2]
+        dist = (xy ** 2).sum(-1) ** 0.5
+        mask = dist < 12
+
+        locations = locations[mask]
+        dimensions = dimensions[mask]
+        yaws = yaws[mask]
+        name = name[mask]
+        bbox = bbox[mask]
+
         for anno in annos:
             category, dimension = anno["name"], anno["dimension"]
             all_dimensions[category.lower()].append(dimension)
@@ -185,6 +195,7 @@ def save_data_infos(
 
 def main():
     sensor_type = "rs"
+
     if sensor_type == "ouster":
         data_root = Path("data/kitti2")
     else:
@@ -199,18 +210,7 @@ def main():
     data_paths = load_raw_data(Path("data") / "kitti2_raw_data", sensor_type)
     train_paths, val_paths = split_train_val(data_paths)
 
-    save_data_infos(data_root, "train", train_paths)
     save_data_infos(data_root, "val", val_paths)
-
-    create_groundtruth_database(
-        "Kitti2Dataset",
-        data_root,
-        "kitti",
-        data_root / "kitti_infos_train.pkl",
-        relative_path=False,
-        mask_anno_path="instances_train.json",
-        with_mask=False,
-    )
 
 
 if __name__ == "__main__":
